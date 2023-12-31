@@ -1,0 +1,2 @@
+Spesifikasi Input
+Satu baris berisi sebuah bilangan bulat X (0 ≤ X ≤ 100).
