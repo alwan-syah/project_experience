@@ -1,0 +1,183 @@
+Latihan Materi 5
+
+1. Untuk setiap pesanan, hitung subtotal untuk setiap pesanan(diindentifikasi oleh OrderID).
+Code :
+select order_id, cast(sum((quantity * unit_price)-(quantity * unit_price * discount))
+					 as decimal(10,2)) as subtotal
+from order_details
+group by order_id
+order by order_id
+
+2. Kita mencari penjualan Berdasarkan tahun dari 1996-12-24 hingga 1997-09-30.
+Code :
+select O.shipped_date, O.order_id, cast(sum((D.quantity * D.unit_price)-(D.quantity * D.unit_price * D.discount))
+					 as decimal(10,2)) as subtotal, extract (year from O.shipped_date) as year
+from order_details D
+inner join orders O on D.order_id = O.order_id
+where O.shipped_date >= '1996-12-24' and O.shipped_date <= '1997-09-30'
+group by O.order_id
+order by O.shipped_date
+
+3. Kita hanya diminta untuk menampilkan list informasi product berurut berdasarkan alphabet.
+Code :
+select product_id, product_name, supplier_id, category_id, quantity_per_unit, unit_price
+from products
+order by product_name
+
+4. Kita menampilkan data product_id dan product_name dari tabel product dan urutkan berdasarkan nama productnya.
+Code :
+select product_id, product_name
+from products
+order by product_name
+
+5. Kita diminta membuat kueri untuk menghitung harga jual untuk setiap pesanan setelah diskon diterapkan.
+Code :
+select d.order_id, p.product_name, d.unit_price, d.quantity, d.discount,
+		cast(sum((d.quantity * d.unit_price)-(d.quantity * d.unit_price * d.discount)) 
+			as decimal(10,2)) as ExtendedPrice
+from order_details d
+inner join products p on d.product_id = p.product_id
+group by d.order_id, p.product_name, d.unit_price, d.quantity, d.discount
+order by d.order_id
+
+6. Kita diminta menampilkan list total product terjual dan productsales digabungkan berdasarkan category dari product tersebut dan diurutkan berdasar category dan nama product
+Code : 
+select c.category_id, c.category_name, p.product_name,
+	cast(sum((d.quantity * d.unit_price)-(d.quantity * d.unit_price * d.discount)) as decimal (10,2))
+	as ProductSales
+from categories c
+inner join products p on c.category_id = p.category_id
+inner join order_details d on p.product_id = d.product_id
+inner join orders o on o.order_id = d.order_id
+where extract(year from o.order_date) = '1997'
+group by c.category_id, c.category_name, p.product_name
+order by c.category_name, p.product_name
+
+7. Kita diminta menampilkan list 10 product termahal berdasarkan unit pricenya.
+Code :
+select product_name as "Ten_Most_Expensive_Product", unit_price as "UnitPrice"
+from products
+order by unit_price desc
+limit 10
+
+8. Kita diminta menampilkan informasi semua product berdasarkan category dari product-product tersebut. dimana ada ketentuan informasi disconrinued yang di tambahkan.
+Code :
+select c.category_name, p.product_name, p.quantity_per_unit, p.units_in_stock,
+	case
+		when p.discontinued = 1 then 'y'
+		when p.discontinued = 0 then 'n'
+	end as discontinued
+from products p
+inner join categories c on p.category_id = c.category_id
+order by c.category_name, p.product_name
+
+9. kita diminta menampilkan seluruh customer dan supplier berdasarkan kota asalnya, disini kita harus menggabungkan 2 query, dan memberikan keterangan mana yang sebagai customer dan supplier.
+Code :
+select city, company_name, contact_name,
+	case
+		when customer_id is null then 'Suppliers'
+		when customer_id is not null then 'Customers'
+	end as "Relationship"
+from customers
+union all
+select city, company_name, contact_name,
+	case
+		when supplier_id is null then 'Customers'
+		when supplier_id is not null then 'Suppliers'
+	end as "Relationship"
+from suppliers
+order by city
+
+10. Kita diminta menampilkan data sale_amount dari setiap employee yang diurutkan berdasarkan negara asal employee tersebut.
+Code :
+select e.country, e.last_name, e.first_name, o.shipped_date, o.order_id,
+	cast(sum((d.quantity * d.unit_price)-(d.quantity * d.unit_price * d.discount))
+		 as decimal(10,2)) as "Sale_Amount"
+from employees e
+inner join orders o on e.employee_id = o.employee_id
+inner join order_details d on o.order_id = d.order_id
+where extract (year from o.shipped_date) = '1997'
+group by e.country, e.last_name, e.first_name, o.shipped_date, o.order_id
+order by e.country, e.last_name, e.first_name, o.shipped_date
+
+11. Kita diminta menampilkan data product dan rata-rata dari unit_price tiap product.
+Code : 
+select product_name, unit_price
+from products
+where unit_price > (select avg (total)
+				   from (select sum(unit_price) as total
+						from products
+						group by product_name) as average)
+order by unit_price
+
+12. Kita diminta mengelompokkan semua data product beserta kategorynya berdasarkan kuartal. Jumlah penjualan tiap kuartal dari product, kuartal diambil dari shipped_date dari setiap productnya.
+Code :
+select c.category_name, p.product_name,
+	cast(sum((d.quantity * d.unit_price)-(d.quantity * d.unit_price * d.discount))
+		as decimal(12,2)) as ProductSales,
+		concat('Qtr',' ', extract(quarter from o.shipped_date)) as ShippedQuarter
+from products p
+join categories c on p.category_id = c.category_id
+join order_details d on p.product_id = d.product_id
+join orders o on d.order_id = o.order_id
+where extract(year from o.shipped_date) = '1997'
+group by ShippedQuarter, c.category_name, p.product_name
+order by c.category_name, p.product_name
+
+13. Kita diminta menampilkan categorysales dari category utama product pada tahun 1997. category sales didapat dari quantity*unit_price - discount.
+Code :
+select c.category_name,
+	cast(sum((d.quantity * d.unit_price)-(d.quantity * d.unit_price * d.discount))
+		as decimal(12,2)) as CategorySales
+from categories c
+inner join products p on c.category_id = p.category_id
+inner join order_details d on p.product_id = d.product_id
+inner join orders o on d.order_id = o.order_id
+where extract(year from o.order_date) = '1997'
+group by c.category_name
+order by c.category_name
+
+14. Kita diminta menampilkan banyaknya order dari setiap produk berdasarkan kuartal yang diambil dari order_date pada tahun 1997. urut dan gabung berdasarkan product_name, dan order_date. Jika pada kuartal tersebut tidak ada order product maka tuliskan jumlahnya 0.
+Code :
+select p.product_name, c.company_name, extract(year from o.order_date) as OrderYear,
+case
+	when extract (quarter from o.order_date) = '1' then cast (sum((d.quantity * d.unit_price)-
+		(d.quantity * d.unit_price * d.discount)) as decimal(10,0))
+			else '0'
+				end as "Qtr 1",
+case
+	when extract (quarter from o.order_date) = '2' then cast (sum((d.quantity * d.unit_price)-
+		(d.quantity * d.unit_price * d.discount)) as decimal(10,0))
+			else '0'
+				end as "Qtr 2",
+case
+	when extract (quarter from o.order_date) = '3' then cast (sum((d.quantity * d.unit_price)-
+		(d.quantity * d.unit_price * d.discount)) as decimal(10,0))
+			else '0'
+				end as "Qtr 3",
+case
+	when extract (quarter from o.order_date) = '4' then cast (sum((d.quantity * d.unit_price)-
+		(d.quantity * d.unit_price * d.discount)) as decimal(10,0))
+			else '0'
+				end as "Qtr 4"
+from customers c
+inner join orders o on o.customer_id = c.customer_id
+inner join order_details d on d.order_id = o.order_id
+inner join products p on p.product_id = d.product_id
+where extract(year from o.order_date) = '1997'
+group by p.product_name, c.company_name, o.order_date
+
+15. Kita diminta menampilkan banyaknya unit_in_stock dari setiap kategoru berdasarkan dari benua pemasok. Keterangan benua diambil dari negara dari pemasok product. urut dan gabung berdasarkan product_category dan benuanya.
+Code :
+select c.category_name as product_category,
+	case
+		when s.country in ('USA', 'Brazil', 'Canada') then 'America'
+		when s.country in ('Australia', 'Japan', 'Singapore') then 'Asia Pasific'
+		else 'Europe'
+	end as supplier_continent,
+	sum(p.units_in_stock) as unit_in_stock
+from categories c
+inner join products p on c.category_id = p.category_id
+inner join suppliers s on p.supplier_id = s.supplier_id
+group by c.category_name, supplier_continent
+order by c.category_name

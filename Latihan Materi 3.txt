@@ -1,0 +1,68 @@
+Latihan Materi 3
+
+1. Write a query in SQL to find the name adn year of the movies.
+Code :
+select mov_title, mov_year
+from movie
+
+2. Write a query in SQL to find the year when the movie American Beauty released.
+Code :
+select mov_year
+from movie
+where mov_title = 'American Beauty'
+
+3. Write a query in SQL to find the movie which was released in the year 1999.
+Code :
+select mov_title
+from movie
+where mov_year = 1999
+
+4. Write a query in SQL to find the movies which was relased before 1998.
+Code :
+select mov_title
+from movie
+where mov_year < 1998
+
+
+5. Write a query in SQL to return the name of all reviewers and name of movies together in a single list.
+Code :
+select reviewer.rev_name, movie.mov_title
+from reviewer
+inner join rating on reviewer.rev_id = rating.rev_id
+inner join movie on movie.mov_id = rating.mov_id
+where reviewer.rev_name is not null
+
+6. Write a query in SQL to find the name of all reviewers who have rated 7 or more stars to their rating
+Code :
+select reviewer.rev_name
+from reviewer, rating
+where reviewer.rev_id = rating.rev_id and rating.rev_stars >= 7 and reviewer.rev_name is not null
+
+7.Write a query in SQL to find the titles of all movies thaht have no ratings.
+Code :
+select movie.mov_title
+from movie
+inner join rating on movie.mov_id = rating.mov_id
+where rating.rev_stars is null
+
+8. Write a query in SQL to find the titles of the movies with ID 905, 907, 917.
+Code :
+select mov_title
+from movie
+where mov_id in (905, 907, 917)
+
+select mov_id, mov_title
+from movie
+where mov_id in (905, 907, 917)
+
+9. Write a query in SQL to find the list of all those movies with year which include the words Boogie Nights.
+Code :
+select mov_title
+from movie
+where mov_title like '%Boogie Nights%'
+
+10. Write a query in SQL to find the ID number for the actor whose first name is 'Woody' and the last name is 'Allen'
+Code :
+select act_id, act_fname, act_lname
+from actor
+where act_fname = 'Woody' and act_lname = 'Allen'
